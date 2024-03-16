@@ -1,6 +1,10 @@
 import React, { useRef, useState } from 'react'
 import Header from './Header';
 import { checkValidateData } from '../../utils/validate';
+import { getAuth, createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from '../../utils/firebase';
+
+
 function LogIn() {
    
    const [isSignInForm,setSignInForm] = useState(true);
@@ -8,7 +12,7 @@ function LogIn() {
 
    const email = useRef(null);
    const password = useRef(null);
-
+   const fullName= useRef(null);
 
   const toggleSignInForm = ()=>{
     setSignInForm(!isSignInForm);
@@ -20,8 +24,45 @@ function LogIn() {
     //console.log(email.current.value);
     const message = checkValidateData(email.current.value,password.current.value);
     // console.log(message); 
-    setErrorMessage(message);       
-  }
+    setErrorMessage(message);
+    
+    if(!message) return;
+    
+    //SIgn In Sign Up logic
+    if(!isSignInForm)
+    {
+      console.log("Inside insert logice")
+      //Sign Up logic
+      createUserWithEmailAndPassword(auth, email.current.value, password.current.value)
+  .then((userCredential) => {
+    // Signed up 
+    const user = userCredential.user;
+    console.log(user)
+    // ...
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    setErrorMessage(errorCode+"-"+errorMessage);
+    // ..
+  });
+    }
+    else{
+      //Sign In logic
+      signInWithEmailAndPassword(auth, email.current.value, password.current.value)
+  .then((userCredential) => {
+    // Signed in 
+    const user = userCredential.user;
+    console.log(user);
+    // ...
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    setErrorMessage(errorCode+"-"+errorMessage);
+  });
+    }
+  };
 
   return (
     <div >
@@ -31,14 +72,14 @@ function LogIn() {
     </div>
     <form onSubmit={(e)=>e.preventDefault()}className='w-3/12 absolute p-12 bg-black my-24 mx-auto right-0 left-0 text-white rounded-lg bg-opacity-80'>
      <h1 className='font-bold text-3xl py-4'>{isSignInForm ? "Sign In" : "Sign Up"}</h1>
-     { !isSignInForm && (<input type="text" placeholder='Full Name' className='p-2 my-4 w-full bg-gray-500'></input>)
+     { !isSignInForm && (<input type="text" ref={fullName} placeholder='Full Name' className='p-2 my-4 w-full bg-gray-500'></input>)
         
       }
     <input type="text" ref={email} placeholder='Email address' className='p-2 my-4 w-full bg-gray-500'></input>
       
       <input type="password" ref={password} placeholder='Password' className='p-2 my-4 w-full bg-gray-500'></input>
       <p className='text-red-500 font-bold text-lg '>{errorMessage}</p>
-      <button className='p-4 my-6 bg-red-700 w-full' onClick={handlebuttonClick}>{isSignInForm ? "Sign In" : "Sign Up"} </button>
+      <button className='p-4 my-6 bg-red-700 w-full' onClick={()=>handlebuttonClick()}>{isSignInForm ? "Sign In" : "Sign Up"} </button>
 
       <p className='py-4' onClick={toggleSignInForm}>{isSignInForm ? "New to Netflix? Sign up" : "Already registered? Sign In Now"}</p>
     </form>
